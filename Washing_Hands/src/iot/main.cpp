@@ -1,7 +1,10 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#include <Wire.h>
+
 // O LED azul integrado na placa costuma ser o pino 2
 #define LED_PIN 2
+
 
 const char *ssid = "ESP32-Access-Point";
 const char *password = "12345678";

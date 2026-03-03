@@ -1,0 +1,57 @@
+#include <Arduino.h>
+
+#define BUTTON_PIN 26
+
+// Variáveis para controlar o botão
+int lastButtonState = 1; // HIGH porque estamos a usar INPUT_PULLUP
+int i = 0;
+// Variáveis para controlar o Timer
+bool timerRunning = false;
+unsigned long startTime = 0;
+const unsigned long timerDuration = 60000; // 60 segundos (em milissegundos)
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  
+  Serial.println("Sistema pronto!");
+  Serial.println("Pressione o botao para iniciar o timer de 1 minuto.");
+}
+
+void loop() {
+  // Lê o estado atual do botão
+  int currentButtonState = digitalRead(BUTTON_PIN);
+
+  // Verifica se o botão acabou de ser pressionado (mudou de HIGH para LOW)
+  if (lastButtonState == 1 && currentButtonState == 0) {
+    
+    if (timerRunning == false) {
+      Serial.println("Timer iniciado! 1 minuto a contar...");
+      startTime = millis(); // Guarda o momento exato em que o botão foi clicado
+      Serial.println(startTime);
+      timerRunning = true;
+    } else {
+      Serial.println("Aviso: O timer ja esta a correr!");
+    }
+    
+    delay(50); // Pequeno atraso para "debounce" (evitar cliques duplos acidentais causados pela mola do botão)
+  }
+  
+  // Atualiza o estado anterior do botão para a próxima volta do loop
+  lastButtonState = currentButtonState;
+
+  // Se o timer estiver a correr, verifica se o tempo já passou
+  if (timerRunning == true) {
+    unsigned long currentTime = millis();
+    
+    
+    // Se a diferença entre o tempo atual e o tempo de início for maior ou igual a 60000ms
+    if (currentTime - startTime >= timerDuration) {
+      Serial.println("***********************************");
+      Serial.println("TEMPO ESGOTADO! 1 minuto completado.");
+      Serial.println("***********************************");
+      
+      timerRunning = false; // Desliga o timer para poder ser iniciado novamente
+    }
+  }
+}

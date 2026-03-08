@@ -1,0 +1,14 @@
+1. GND ➔ Ligar ao GND do ESP32.
+2. VCC ➔ Ligar ao pino 3V3 (ou 5V) do ESP32. O ecrã tem um regulador interno que aceita 5V, mas usar os 3.3V do ESP32 é igualmente perfeito.
+3. SCK (Clock) ➔ Ligar ao GPIO 18 do ESP32.
+4. SDA (MOSI/Dados) ➔ Ligar ao GPIO 23 do ESP32.
+5. RES (Reset) ➔ Ligar ao GPIO 4 do ESP32.
+6. RS (Data/Command) ➔ Ligar ao GPIO 2 do ESP32. (Nota: em muitos tutoriais online, este pino chama-se "DC").
+7. CS (Chip Select) ➔ Ligar ao GPIO 5 do ESP32.
+8. LEDA (Retroiluminação) ➔ Ligar ao pino 3V3 do ESP32. ⚠️ ALERTA VERMELHO: O manual avisa expressamente para não ligares este pino a 5V, pois pode destruir o teu ecrã!
+
+IMPORTANTE:o GND é o Pino 1!
+
+COORDENADAS: (0,0) É NO LADO DO PINO GND;
+
+ST77XX_BLUE E ST77XX_RED ESTÃO TROCADOS!!!

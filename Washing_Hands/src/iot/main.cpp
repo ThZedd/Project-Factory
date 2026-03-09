@@ -59,28 +59,40 @@ void loop()
         {
         //Não esquecer de colocar o case 0 no setup assim ao iniciar vai logo fazer oque o case 0 faz
         case 0:
-            Serial.println("Olá bora lavar as mãos juntos??!!!");
-            Serial.println("Clica no botão denovo para começarmos!!!!");
+            display.setCursor(50, 85);
+            display.print("Olá bora lavar as mãos juntos??!!!");
+            delay(3000);
+            display.fillScreen(ST77XX_BLACK);
+            delay(1000);
+            display.setCursor(50, 85);
+            display.print("Clica no botão denovo para começarmos!!!!");
             break;
         case 1:
-            Serial.println("Antes de começarmos que tal tornarmos isto um pouco mais divertido?");
-            Serial.println("Vai aparecer um animal no ecrã e tu não te podes esquecer qual foi, ok?");
-            Serial.println("Clica no botão denovo para avançarmos!!!!");
+            display.fillScreen(ST77XX_BLACK);
+            display.setCursor(50, 85);
+            delay(3000);
+            display.print("Antes de começarmos que tal tornarmos isto um pouco mais divertido?");
+            delay(3000);
+            display.fillScreen(ST77XX_BLACK);
+            display.print("Vai aparecer um animal no ecrã e tu não te podes esquecer qual foi, ok?");
+            delay(3000);
+            display.fillScreen(ST77XX_BLACK);
+            display.print("Clica no botão denovo para avançarmos!!!!");
             break;
         case 2:
             //ira ser escolhido um animal qualquer ( entre 4 opcoes)
-            Serial.println("Clica no botão denovo quando tiveres o decorado!!!!");
+            display.print("Clica no botão denovo quando tiveres o decorado!!!!");
             break;
         case 3:
-             Serial.println("Bora lá começar primeiro pomos o sabão na mão");
+             display.print("Bora lá começar primeiro pomos o sabão na mão");
              delay(3000); // 3 segundos de pausa, tempo medio que uma criança demora a colocar o sabão
-             Serial.println("E agora esfrega esfrega esfrega!!!");
+             display.print("E agora esfrega esfrega esfrega!!!");
             break;
         case 4:
             /* code */
             break;
         case 5:
-            printf("Parabéns conseguiste!!!!");
+            display.print("Parabéns conseguiste!!!!");
             break;
 
         default:
@@ -92,6 +104,10 @@ void loop()
         currentPhase++;
     }
 
+
+
     // Atualiza o estado anterior do botão para a próxima volta do loop
     lastButtonState = currentButtonState;
+    Serial.print("CurrentPhase: ");
+    Serial.println(currentPhase);
 }

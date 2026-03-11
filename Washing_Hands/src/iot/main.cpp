@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
-#include <Adafruit_ST7735.h>
 #include <SPI.h>
-
+#include <Adafruit_ST7735.h>
+#include <Adafruit_ILI9341.h> // Biblioteca especifica para o simulador Wokwi
+#include <Fonts/FreeSansBold12pt7b.h>
+#include "PixelFont.h"
 
 #define MAINBUTTON_PIN 13 // This button will make sure to advance to the next phase
 
@@ -20,15 +22,17 @@
 #define DISPLAY_RS_DC_PIN 2
 #define DISPLAY_CS_PIN 5
 
-Adafruit_ST7735 display = Adafruit_ST7735(DISPLAY_CS_PIN, DISPLAY_RS_DC_PIN, DISPLAY_RES_PIN);
+// Inicializa o ecrã ILI9341 (Apenas para Simulação)
+Adafruit_ILI9341 display = Adafruit_ILI9341(DISPLAY_CS_PIN, DISPLAY_RS_DC_PIN, DISPLAY_RES_PIN);
+
 // Variáveis para controlar o botão
 int lastButtonState = 1; // HIGH porque estamos a usar INPUT_PULLUP
 int currentPhase = 0;   // This will indicate in what phase are we in
-// Variáveis para controlar o Timer
 
 void setup()
 {
     Serial.begin(115200);
+    
     //Buttons Mode
     pinMode(MAINBUTTON_PIN, INPUT_PULLUP);
     pinMode(ANIMALBUTTON1_PIN, INPUT_PULLUP);
@@ -40,15 +44,20 @@ void setup()
     //Serial2.begin(9600, SERIAL_8N1, DFPLAYER_RX2_PIN, DFPLAYER_TX2_PIN);
 
     //Display inicialized
-    display.initR(INITR_BLACKTAB); 
+    display.begin(); // Comando correto para o ILI9341
     display.setRotation(1); 
+    
     Serial.println("Sistema pronto!");
     
+    // Configuracoes de texto para o efeito "Pixel Art" e visibilidade
+    display.setFont(&PressStart2P_Regular8pt7b);
+    display.setTextSize(1); // Tamanho maior para preencher melhor o ecrã
+    display.setTextColor(ILI9341_WHITE); // Garante que o texto é branco
 }
 
 void loop()
 {
-    // Lê o estado atual do botão
+    // Lê o estado atual do botão principal
     int currentButtonState = digitalRead(MAINBUTTON_PIN);
 
     // Verifica se o botão acabou de ser pressionado (mudou de HIGH para LOW)
@@ -59,55 +68,90 @@ void loop()
         {
         //Não esquecer de colocar o case 0 no setup assim ao iniciar vai logo fazer oque o case 0 faz
         case 0:
-            display.setCursor(50, 85);
-            display.print("Olá bora lavar as mãos juntos??!!!");
+            display.fillScreen(ILI9341_BLACK);
+            display.setCursor(10, 50);
+            display.print("Ola bora lavar as");
+            display.setCursor(10, 80);
+            display.print("maos juntos?!!!"); // Trigraph e acentos resolvidos
+            
             delay(3000);
-            display.fillScreen(ST77XX_BLACK);
+            display.fillScreen(ILI9341_BLACK);
             delay(1000);
-            display.setCursor(50, 85);
-            display.print("Clica no botão denovo para começarmos!!!!");
+            
+            display.setCursor(10, 80);
+            display.print("Clica no botao para");
+            display.setCursor(10, 110);
+            display.print("comecarmos!!!!");
             break;
+            
         case 1:
-            display.fillScreen(ST77XX_BLACK);
-            display.setCursor(50, 85);
+            display.fillScreen(ILI9341_BLACK);
+            display.setCursor(10, 50);
             delay(3000);
-            display.print("Antes de começarmos que tal tornarmos isto um pouco mais divertido?");
+            display.print("Antes de comecar,");
+            display.setCursor(10, 80);
+            display.print("que tal algo divertido?");
+            
             delay(3000);
-            display.fillScreen(ST77XX_BLACK);
-            display.print("Vai aparecer um animal no ecrã e tu não te podes esquecer qual foi, ok?");
-            delay(3000);
-            display.fillScreen(ST77XX_BLACK);
-            display.print("Clica no botão denovo para avançarmos!!!!");
+            display.fillScreen(ILI9341_BLACK);
+            display.setCursor(10, 50);
+            display.print("Vai aparecer um animal");
+            display.setCursor(10, 80);
+            display.print("e tu nao te podes");
+            display.setCursor(10, 110);
+            display.print("esquecer qual foi, ok?");
+            
+            delay(4000);
+            display.fillScreen(ILI9341_BLACK);
+            display.setCursor(10, 80);
+            display.print("Clica para avancar!");
             break;
+            
         case 2:
+            display.fillScreen(ILI9341_BLACK);
             //ira ser escolhido um animal qualquer ( entre 4 opcoes)
-            display.print("Clica no botão denovo quando tiveres o decorado!!!!");
+            display.setCursor(10, 80);
+            display.print("Clica quando tiveres");
+            display.setCursor(10, 110);
+            display.print("decorado o animal!!!!");
             break;
+            
         case 3:
-             display.print("Bora lá começar primeiro pomos o sabão na mão");
-             delay(3000); // 3 segundos de pausa, tempo medio que uma criança demora a colocar o sabão
-             display.print("E agora esfrega esfrega esfrega!!!");
+             display.fillScreen(ILI9341_BLACK);
+             display.setCursor(10, 50);
+             display.print("Bora la comecar!");
+             display.setCursor(10, 80);
+             display.print("Primeiro, sabao na mao!");
+             
+             delay(3000); // 3 segundos de pausa
+             display.setCursor(10, 140);
+             display.print("E agora esfrega esfrega!");
             break;
+            
         case 4:
+            display.fillScreen(ILI9341_BLACK);
             /* code */
             break;
+            
         case 5:
-            display.print("Parabéns conseguiste!!!!");
+            display.fillScreen(ILI9341_BLACK);
+            display.setCursor(10, 80);
+            display.print("Parabens conseguiste!!!!");
             break;
 
         default:
-            currentPhase = 0;
+            currentPhase = -1; // Volta a -1 para que a proxima soma o coloque na fase 0
             break;
         }
 
-        delay(50);
+        delay(50); // Debounce
         currentPhase++;
+        
+        // Agora os prints estão DENTRO do if e não vão fazer spam!
+        Serial.print("Mudou para CurrentPhase: ");
+        Serial.println(currentPhase);
     }
-
-
 
     // Atualiza o estado anterior do botão para a próxima volta do loop
     lastButtonState = currentButtonState;
-    Serial.print("CurrentPhase: ");
-    Serial.println(currentPhase);
 }

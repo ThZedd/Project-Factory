@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "author": "Berna",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    {
+      "type": "wokwi-ili9341",
+      "id": "tft",
+      "top": -148.7,
+      "left": 231.6,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_main",
+      "top": 150,
+      "left": -150,
+      "attrs": { "color": "red", "label": "MAIN (13)" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_a1",
+      "top": 200,
+      "left": -150,
+      "attrs": { "color": "green", "label": "A1 (14)" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_a2",
+      "top": 250,
+      "left": -150,
+      "attrs": { "color": "blue", "label": "A2 (25)" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_a3",
+      "top": 300,
+      "left": -150,
+      "attrs": { "color": "yellow", "label": "A3 (26)" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_a4",
+      "top": 350,
+      "left": -150,
+      "attrs": { "color": "white", "label": "A4 (27)" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "esp:18", "tft:SCK", "green", [] ],
+    [ "esp:23", "tft:MOSI", "green", [] ],
+    [ "esp:19", "tft:MISO", "green", [] ],
+    [ "esp:4", "tft:RESET", "green", [] ],
+    [ "esp:2", "tft:DC", "green", [] ],
+    [ "esp:5", "tft:CS", "green", [] ],
+    [ "esp:3V3", "tft:VCC", "red", [] ],
+    [ "esp:GND", "tft:GND", "black", [] ],
+    [ "esp:3V3", "tft:LED", "red", [] ],
+    [ "esp:13", "btn_main:1.l", "green", [] ],
+    [ "esp:GND", "btn_main:2.l", "black", [] ],
+    [ "esp:14", "btn_a1:1.l", "green", [] ],
+    [ "esp:GND", "btn_a1:2.l", "black", [] ],
+    [ "esp:25", "btn_a2:1.l", "green", [] ],
+    [ "esp:GND", "btn_a2:2.l", "black", [] ],
+    [ "esp:26", "btn_a3:1.l", "green", [] ],
+    [ "esp:GND", "btn_a3:2.l", "black", [] ],
+    [ "esp:27", "btn_a4:1.l", "green", [] ],
+    [ "esp:GND", "btn_a4:2.l", "black", [] ],
+    [ "tft:GND", "esp:GND.3", "black", [ "v0" ] ],
+    [ "tft:RST", "esp:4", "green", [ "v0" ] ],
+    [ "tft:D/C", "esp:2", "green", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}

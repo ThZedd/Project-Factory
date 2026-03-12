@@ -14,39 +14,19 @@
     },
     {
       "type": "wokwi-pushbutton",
-      "id": "btn_main",
-      "top": 150,
-      "left": -150,
-      "attrs": { "color": "red", "label": "MAIN (13)" }
-    },
-    {
-      "type": "wokwi-pushbutton",
       "id": "btn_a1",
-      "top": 200,
-      "left": -150,
+      "top": 198.2,
+      "left": -153.6,
       "attrs": { "color": "green", "label": "A1 (14)" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btn_a2",
-      "top": 250,
-      "left": -150,
+      "top": 246.2,
+      "left": -153.6,
       "attrs": { "color": "blue", "label": "A2 (25)" }
     },
-    {
-      "type": "wokwi-pushbutton",
-      "id": "btn_a3",
-      "top": 300,
-      "left": -150,
-      "attrs": { "color": "yellow", "label": "A3 (26)" }
-    },
-    {
-      "type": "wokwi-pushbutton",
-      "id": "btn_a4",
-      "top": 350,
-      "left": -150,
-      "attrs": { "color": "white", "label": "A4 (27)" }
-    }
+    { "type": "wokwi-hc-sr04", "id": "ultrasonic1", "top": -56.1, "left": -224.9, "attrs": {} }
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
@@ -60,19 +40,17 @@
     [ "esp:3V3", "tft:VCC", "red", [] ],
     [ "esp:GND", "tft:GND", "black", [] ],
     [ "esp:3V3", "tft:LED", "red", [] ],
-    [ "esp:13", "btn_main:1.l", "green", [] ],
-    [ "esp:GND", "btn_main:2.l", "black", [] ],
     [ "esp:14", "btn_a1:1.l", "green", [] ],
     [ "esp:GND", "btn_a1:2.l", "black", [] ],
     [ "esp:25", "btn_a2:1.l", "green", [] ],
     [ "esp:GND", "btn_a2:2.l", "black", [] ],
-    [ "esp:26", "btn_a3:1.l", "green", [] ],
-    [ "esp:GND", "btn_a3:2.l", "black", [] ],
-    [ "esp:27", "btn_a4:1.l", "green", [] ],
-    [ "esp:GND", "btn_a4:2.l", "black", [] ],
     [ "tft:GND", "esp:GND.3", "black", [ "v0" ] ],
     [ "tft:RST", "esp:4", "green", [ "v0" ] ],
-    [ "tft:D/C", "esp:2", "green", [ "v0" ] ]
+    [ "tft:D/C", "esp:2", "green", [ "v0" ] ],
+    [ "ultrasonic1:VCC", "esp:3V3", "red", [ "v0" ] ],
+    [ "ultrasonic1:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "ultrasonic1:TRIG", "esp:26", "green", [ "v0" ] ],
+    [ "ultrasonic1:ECHO", "esp:27", "green", [ "v0" ] ]
   ],
   "dependencies": {}
 }

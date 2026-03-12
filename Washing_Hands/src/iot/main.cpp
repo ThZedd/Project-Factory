@@ -3,16 +3,17 @@
 #include <SPI.h>
 #include <Adafruit_ST7735.h>
 #include <Adafruit_ILI9341.h> // Biblioteca especifica para o simulador Wokwi
-#include <Fonts/FreeSansBold12pt7b.h>
 #include "PixelFont.h"
 
-#define MAINBUTTON_PIN 13 // This button will make sure to advance to the next phase
+// --- Pinos do Sensor Ultrassónico HC-SR04 ---
+#define TRIG_PIN 26 
+#define ECHO_PIN 27 
 
-#define ANIMALBUTTON1_PIN 14 // This button will make sure to get if the children got the animal correct
-#define ANIMALBUTTON2_PIN 25 // This button will make sure to get if the children got the animal correct
-#define ANIMALBUTTON3_PIN 26 // This button will make sure to get if the children got the animal correct
-#define ANIMALBUTTON4_PIN 27 // This button will make sure to get if the children got the animal correct
+// --- Pinos dos Botões (Reduzido para 2) ---
+#define ANIMALBUTTON1_PIN 14 
+#define ANIMALBUTTON2_PIN 25 
 
+// --- Pinos do DFPlayer e Ecrã ---
 #define DFPLAYER_RX2_PIN 16
 #define DFPLAYER_TX2_PIN 17
 
@@ -25,63 +26,73 @@
 // Inicializa o ecrã ILI9341 (Apenas para Simulação)
 Adafruit_ILI9341 display = Adafruit_ILI9341(DISPLAY_CS_PIN, DISPLAY_RS_DC_PIN, DISPLAY_RES_PIN);
 
-// Variáveis para controlar o botão
-int lastButtonState = 1; // HIGH porque estamos a usar INPUT_PULLUP
-int currentPhase = 0;   // This will indicate in what phase are we in
+// Variáveis para controlar o Jogo e o Sensor
+int currentPhase = 0;   
+bool wasNear = false; // Guarda se a mão já estava perto na última leitura
+const int triggerDistance = 15; // Distância em centímetros para "clicar"
 
 void setup()
 {
     Serial.begin(115200);
     
-    //Buttons Mode
-    pinMode(MAINBUTTON_PIN, INPUT_PULLUP);
+    // Configura os Botões
     pinMode(ANIMALBUTTON1_PIN, INPUT_PULLUP);
     pinMode(ANIMALBUTTON2_PIN, INPUT_PULLUP);
-    pinMode(ANIMALBUTTON3_PIN, INPUT_PULLUP);
-    pinMode(ANIMALBUTTON4_PIN, INPUT_PULLUP);
 
-    //DFPlayer inicialized
-    //Serial2.begin(9600, SERIAL_8N1, DFPLAYER_RX2_PIN, DFPLAYER_TX2_PIN);
+    // Configura o Sensor Ultrassónico
+    pinMode(TRIG_PIN, OUTPUT);
+    pinMode(ECHO_PIN, INPUT);
 
-    //Display inicialized
-    display.begin(); // Comando correto para o ILI9341
+    // Inicializa o ecrã
+    display.begin(); 
     display.setRotation(1); 
     
     Serial.println("Sistema pronto!");
     
-    // Configuracoes de texto para o efeito "Pixel Art" e visibilidade
-    display.setFont(&PressStart2P_Regular8pt7b);
-    display.setTextSize(1); // Tamanho maior para preencher melhor o ecrã
-    display.setTextColor(ILI9341_WHITE); // Garante que o texto é branco
+    // Configuracoes de texto Pixel Art
+    display.setFont(&PressStart2P_Regular8pt7b); // Verifica se o nome continua correto no teu PixelFont.h
+    display.setTextSize(1); 
+    display.setTextColor(ILI9341_WHITE); 
 }
 
 void loop()
 {
-    // Lê o estado atual do botão principal
-    int currentButtonState = digitalRead(MAINBUTTON_PIN);
+    // 1. DISPARAR O SENSOR ULTRASSÓNICO
+    digitalWrite(TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
 
-    // Verifica se o botão acabou de ser pressionado (mudou de HIGH para LOW)
-    if (lastButtonState == 1 && currentButtonState == 0)
+    // 2. LER O TEMPO QUE O SOM DEMORA A VOLTAR
+    long duration = pulseIn(ECHO_PIN, HIGH);
+    
+    // 3. CALCULAR A DISTÂNCIA EM CENTÍMETROS
+    int distance = duration * 0.034 / 2;
+
+    // 4. VERIFICAR SE HÁ UMA MÃO PERTO (Entre 1 e 15 cm)
+    bool isNear = (distance > 0 && distance < triggerDistance);
+
+    // Se a mão acabou de se aproximar (não estava perto, e agora está)
+    if (isNear && !wasNear)
     {
-
         switch (currentPhase)
         {
-        //Não esquecer de colocar o case 0 no setup assim ao iniciar vai logo fazer oque o case 0 faz
         case 0:
             display.fillScreen(ILI9341_BLACK);
             display.setCursor(10, 50);
             display.print("Ola bora lavar as");
             display.setCursor(10, 80);
-            display.print("maos juntos?!!!"); // Trigraph e acentos resolvidos
+            display.print("maos juntos?!!!"); 
             
             delay(3000);
             display.fillScreen(ILI9341_BLACK);
             delay(1000);
             
             display.setCursor(10, 80);
-            display.print("Clica no botao para");
+            display.print("Aproxima a mao");
             display.setCursor(10, 110);
-            display.print("comecarmos!!!!");
+            display.print("para comecarmos!");
             break;
             
         case 1:
@@ -104,16 +115,15 @@ void loop()
             delay(4000);
             display.fillScreen(ILI9341_BLACK);
             display.setCursor(10, 80);
-            display.print("Clica para avancar!");
+            display.print("Aproxima a mao!");
             break;
             
         case 2:
             display.fillScreen(ILI9341_BLACK);
-            //ira ser escolhido um animal qualquer ( entre 4 opcoes)
             display.setCursor(10, 80);
-            display.print("Clica quando tiveres");
+            display.print("Quando decorares,");
             display.setCursor(10, 110);
-            display.print("decorado o animal!!!!");
+            display.print("aproxima a mao!");
             break;
             
         case 3:
@@ -123,14 +133,13 @@ void loop()
              display.setCursor(10, 80);
              display.print("Primeiro, sabao na mao!");
              
-             delay(3000); // 3 segundos de pausa
+             delay(3000); 
              display.setCursor(10, 140);
              display.print("E agora esfrega esfrega!");
             break;
             
         case 4:
             display.fillScreen(ILI9341_BLACK);
-            /* code */
             break;
             
         case 5:
@@ -140,18 +149,18 @@ void loop()
             break;
 
         default:
-            currentPhase = -1; // Volta a -1 para que a proxima soma o coloque na fase 0
+            currentPhase = -1; 
             break;
         }
 
-        delay(50); // Debounce
         currentPhase++;
         
-        // Agora os prints estão DENTRO do if e não vão fazer spam!
         Serial.print("Mudou para CurrentPhase: ");
         Serial.println(currentPhase);
     }
 
-    // Atualiza o estado anterior do botão para a próxima volta do loop
-    lastButtonState = currentButtonState;
+    // Atualiza a variável para o próximo loop (evita que ative várias vezes se a mão ficar parada à frente do sensor)
+    wasNear = isNear;
+    
+    delay(50); // Pequena pausa para estabilizar o sensor
 }

@@ -1,0 +1,48 @@
+#include <Arduino.h>
+#include <Adafruit_GFX.h>
+#include <SPI.h>
+
+#define TRIG_PIN 26
+#define ECHO_PIN 27
+
+long microsecondsToCentimeters(long microseconds)
+{
+    // The speed of sound is 340 m/s or 29 microseconds per centimeter.
+    // The ping travels out and back, so to find the distance of the object we
+    // take half of the distance travelled.
+    return microseconds / 29 / 2;
+}
+
+void setup()
+{
+    Serial.begin(115200);
+    pinMode(TRIG_PIN, OUTPUT);
+    pinMode(ECHO_PIN, INPUT);
+
+    Serial.println("Sistema pronto!");
+}
+
+void loop()
+{
+    digitalWrite(TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+
+    // 2. LER O TEMPO QUE O SOM DEMORA A VOLTAR
+    long duration = pulseIn(ECHO_PIN, HIGH);
+
+    // 3. CALCULAR A DISTÂNCIA EM CENTÍMETROS
+    long cm = microsecondsToCentimeters(duration);
+
+    Serial.print("Distance: ");
+    Serial.println(cm);
+
+    if (cm > 400)
+    {
+        Serial.println("Fora de alcance");
+    }
+
+    delay(500);
+}

@@ -1,166 +1,259 @@
 #include <Arduino.h>
-#include <Adafruit_GFX.h>
 #include <SPI.h>
-#include <Adafruit_ST7735.h>
-#include <Adafruit_ILI9341.h> // Biblioteca especifica para o simulador Wokwi
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7735.h> 
+#include <DFRobotDFPlayerMini.h>
+
+#include "sabao_img.h"
+#include "open_water_img.h"
+#include "water_img.h"
+#include "close_water_img.h"
+#include "secar_img.h"
+#include "crab_img.h"
+#include "fish_img.h"
 #include "PixelFont.h"
 
-// --- Pinos do Sensor Ultrassónico HC-SR04 ---
-#define TRIG_PIN 26 
-#define ECHO_PIN 27 
+// Dimensões do ST7735
+#define IMG_W 160
+#define IMG_H 128
 
-// --- Pinos dos Botões (Reduzido para 2) ---
-#define ANIMALBUTTON1_PIN 14 
-#define ANIMALBUTTON2_PIN 25 
+// Definição dos pinos
+#define BTN_MAIN 26  
+#define BTN_SIM 14   
+#define BTN_NAO 25   
+#define TFT_CS 5
+#define TFT_DC 2
+#define TFT_RST 4
 
-// --- Pinos do DFPlayer e Ecrã ---
-#define DFPLAYER_RX2_PIN 16
-#define DFPLAYER_TX2_PIN 17
+Adafruit_ST7735 display = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+DFRobotDFPlayerMini player;
+bool playerPronto = false; 
 
-#define DISPLAY_SCK_PIN 18
-#define DISPLAY_SDA_PIN 23
-#define DISPLAY_RES_PIN 4
-#define DISPLAY_RS_DC_PIN 2
-#define DISPLAY_CS_PIN 5
+const int AUDIO_INTRODUCAO = 5; // 0001_Boas_Vindas
+const int audioPrestaAtencar = 15; // Áudio de chamar a atenção
 
-// Inicializa o ecrã ILI9341 (Apenas para Simulação)
-Adafruit_ILI9341 display = Adafruit_ILI9341(DISPLAY_CS_PIN, DISPLAY_RS_DC_PIN, DISPLAY_RES_PIN);
+// Perguntas para o Quiz: 2, 3, 4, 5, 6
+int audiosPerguntas[] = {11, 12, 13, 14, 1}; 
 
-// Variáveis para controlar o Jogo e o Sensor
-int currentPhase = 0;   
-bool wasNear = false; // Guarda se a mão já estava perto na última leitura
-const int triggerDistance = 15; // Distância em centímetros para "clicar"
+// Etapas normais: 7, 8, 9, 10, 11
+int audiosEtapas[] = {6, 7, 8, 9, 10}; 
 
-void setup()
-{
-    Serial.begin(115200);
-    
-    // Configura os Botões
-    pinMode(ANIMALBUTTON1_PIN, INPUT_PULLUP);
-    pinMode(ANIMALBUTTON2_PIN, INPUT_PULLUP);
+// Feedbacks do Quiz: 14, 15, 16
+const int AUDIO_FEEDBACK_1 = 2; // Acertaste
+const int AUDIO_FEEDBACK_2 = 3; // Errou_Nao_Fez_Isso
+const int AUDIO_FEEDBACK_3 = 4; // Errou_Fez_Isso
+// ------------------------------------------------------
 
-    // Configura o Sensor Ultrassónico
-    pinMode(TRIG_PIN, OUTPUT);
-    pinMode(ECHO_PIN, INPUT);
+int animalQueFezAetapa[5]; 
+int faseAtual = 0;
+unsigned long tempoBloqueioSurgimento = 0;
 
-    // Inicializa o ecrã
-    display.begin(); 
-    display.setRotation(1); 
-    
-    Serial.println("Sistema pronto!");
-    
-    // Configuracoes de texto Pixel Art
-    display.setFont(&PressStart2P_Regular8pt7b); // Verifica se o nome continua correto no teu PixelFont.h
-    display.setTextSize(1); 
-    display.setTextColor(ILI9341_WHITE); 
+void tocarAudio(int faixa, String texto) {
+  Serial.println("[AUDIO] A TENTAR TOCAR: " + texto + " (Faixa: " + String(faixa) + ")");
+  if (playerPronto) {
+    player.play(faixa);
+    Serial.println("[AUDIO] Sucesso: Comando enviado ao DFPlayer.");
+  } else {
+    Serial.println("[AUDIO] ERRO: DFPlayer nao esta pronto!");
+  }
+  delay(1400); 
 }
 
-void loop()
-{
-    // 1. DISPARAR O SENSOR ULTRASSÓNICO
-    digitalWrite(TRIG_PIN, LOW);
-    delayMicroseconds(2);
-    digitalWrite(TRIG_PIN, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(TRIG_PIN, LOW);
+void setup() {
+  Serial.begin(115200);
+  Serial.println("\n\n[SISTEMA] A iniciar o sistema...");
+  
+  Serial2.begin(9600, SERIAL_8N1, 16, 17);
+  
+  pinMode(BTN_MAIN, INPUT_PULLUP);
+  pinMode(BTN_SIM, INPUT_PULLUP);
+  pinMode(BTN_NAO, INPUT_PULLUP);
+  Serial.println("[SISTEMA] Pinos dos botoes configurados.");
 
-    // 2. LER O TEMPO QUE O SOM DEMORA A VOLTAR
-    long duration = pulseIn(ECHO_PIN, HIGH);
+  display.initR(INITR_BLACKTAB); 
+  display.setRotation(1); 
+  display.fillScreen(ST7735_BLACK); 
+  Serial.println("[SISTEMA] Display inicializado.");
+  
+  Serial.println("[SISTEMA] A aguardar DFPlayer...");
+  if (player.begin(Serial2)) {
+    playerPronto = true;
+    player.volume(20);
+    Serial.println("[SISTEMA] DFPlayer pronto e volume definido para 20.");
+  } else {
+    Serial.println("[SISTEMA] AVISO: Falha ao iniciar DFPlayer! Verifica as ligacoes.");
+  }
+  
+  display.setCursor(0, 50);
+  display.setFont(&PressStart2P_Regular7pt7b);
+  display.setTextSize(1);
+  display.setTextColor(ST7735_WHITE);
+  display.println(" Carrega no");
+  display.println(" botao para");
+  display.println("  comecar");
+  Serial.println("[SISTEMA] Ecrã inicial desenhado. A aguardar inicio do utilizador.");
+  
+  // Define o temporizador inicial para evitar bloqueio no primeiro clique
+  tempoBloqueioSurgimento = millis() - 3000; 
+}
+
+void quizFinal() {
+  Serial.println("\n[QUIZ] --- INICIO DO QUIZ ---");
+  int etapaAlvo = random(0, 5); 
+  bool acertouGeral = false;
+  int animalSorteado = random(0, 2); 
+  
+  Serial.print("[QUIZ] Etapa sorteada para a pergunta: ");
+  Serial.println(etapaAlvo);
+
+  while (!acertouGeral) {
+    bool eOanimalCorreto = (animalSorteado == animalQueFezAetapa[etapaAlvo]);
     
-    // 3. CALCULAR A DISTÂNCIA EM CENTÍMETROS
-    int distance = duration * 0.034 / 2;
-
-    // 4. VERIFICAR SE HÁ UMA MÃO PERTO (Entre 1 e 15 cm)
-    bool isNear = (distance > 0 && distance < triggerDistance);
-
-    // Se a mão acabou de se aproximar (não estava perto, e agora está)
-    if (isNear && !wasNear)
-    {
-        switch (currentPhase)
-        {
-        case 0:
-            display.fillScreen(ILI9341_BLACK);
-            display.setCursor(10, 50);
-            display.print("Ola bora lavar as");
-            display.setCursor(10, 80);
-            display.print("maos juntos?!!!"); 
-            
-            delay(3000);
-            display.fillScreen(ILI9341_BLACK);
-            delay(1000);
-            
-            display.setCursor(10, 80);
-            display.print("Aproxima a mao");
-            display.setCursor(10, 110);
-            display.print("para comecarmos!");
-            break;
-            
-        case 1:
-            display.fillScreen(ILI9341_BLACK);
-            display.setCursor(10, 50);
-            delay(3000);
-            display.print("Antes de comecar,");
-            display.setCursor(10, 80);
-            display.print("que tal algo divertido?");
-            
-            delay(3000);
-            display.fillScreen(ILI9341_BLACK);
-            display.setCursor(10, 50);
-            display.print("Vai aparecer um animal");
-            display.setCursor(10, 80);
-            display.print("e tu nao te podes");
-            display.setCursor(10, 110);
-            display.print("esquecer qual foi, ok?");
-            
-            delay(4000);
-            display.fillScreen(ILI9341_BLACK);
-            display.setCursor(10, 80);
-            display.print("Aproxima a mao!");
-            break;
-            
-        case 2:
-            display.fillScreen(ILI9341_BLACK);
-            display.setCursor(10, 80);
-            display.print("Quando decorares,");
-            display.setCursor(10, 110);
-            display.print("aproxima a mao!");
-            break;
-            
-        case 3:
-             display.fillScreen(ILI9341_BLACK);
-             display.setCursor(10, 50);
-             display.print("Bora la comecar!");
-             display.setCursor(10, 80);
-             display.print("Primeiro, sabao na mao!");
-             
-             delay(3000); 
-             display.setCursor(10, 140);
-             display.print("E agora esfrega esfrega!");
-            break;
-            
-        case 4:
-            display.fillScreen(ILI9341_BLACK);
-            break;
-            
-        case 5:
-            display.fillScreen(ILI9341_BLACK);
-            display.setCursor(10, 80);
-            display.print("Parabens conseguiste!!!!");
-            break;
-
-        default:
-            currentPhase = -1; 
-            break;
-        }
-
-        currentPhase++;
-        
-        Serial.print("Mudou para CurrentPhase: ");
-        Serial.println(currentPhase);
+    Serial.print("[QUIZ] Animal desenhado na tela: ");
+    if (animalSorteado == 0) { 
+        Serial.println("Caranguejo");
+        display.drawRGBBitmap(0, 0, (const uint16_t*)crab_img, IMG_W, IMG_H);
+    } else { 
+        Serial.println("Peixe");
+        display.drawRGBBitmap(0, 0, (const uint16_t*)fish_img, IMG_W, IMG_H);
     }
 
-    // Atualiza a variável para o próximo loop (evita que ative várias vezes se a mão ficar parada à frente do sensor)
-    wasNear = isNear;
+    // --- REMOVIDO O ÁUDIO "PRESTA ATENÇÃO" DAQUI ---
+    // Deixei apenas uma pausa silenciosa para a imagem ser vista
+    delay(1500); 
+
+    Serial.print("[QUIZ] O animal correto para esta etapa era: ");
+    Serial.println(animalQueFezAetapa[etapaAlvo] == 0 ? "Caranguejo" : "Peixe");
+
+    tocarAudio(audiosPerguntas[etapaAlvo], "Pergunta do Quiz " + String(etapaAlvo));
+
+    Serial.println("[QUIZ] A aguardar resposta do utilizador (BOTAO SIM ou BOTAO NAO)...");
+
+    while (true) {
+      if (digitalRead(BTN_SIM) == LOW) {
+        Serial.println("[BOTAO] Botao SIM pressionado.");
+        if (eOanimalCorreto) {
+          Serial.println("[QUIZ] Resultado: ACERTOU! (Disse SIM e era o animal correto)");
+          display.fillScreen(ST7735_GREEN);
+          tocarAudio(AUDIO_FEEDBACK_1, "Acertaste!"); 
+          acertouGeral = true;
+        } else {
+          Serial.println("[QUIZ] Resultado: ERROU! (Disse SIM, mas NAO era este animal)");
+          display.fillScreen(ST7735_RED);
+          tocarAudio(AUDIO_FEEDBACK_2, "Nao, ele nao fez isso."); 
+          animalSorteado = random(0, 2); 
+          Serial.println("[QUIZ] A sortear novo animal e a repetir a pergunta...");
+        }
+        delay(800); break;
+      }
+      if (digitalRead(BTN_NAO) == LOW) {
+        Serial.println("[BOTAO] Botao NAO pressionado.");
+        if (!eOanimalCorreto) {
+          Serial.println("[QUIZ] Resultado: ACERTOU! (Disse NAO e o animal estava errado)");
+          display.fillScreen(ST7735_GREEN);
+          tocarAudio(AUDIO_FEEDBACK_1, "Acertaste!");
+          acertouGeral = true;
+        } else {
+          Serial.println("[QUIZ] Resultado: ERROU! (Disse NAO, mas ERA este animal)");
+          display.fillScreen(ST7735_RED);
+          tocarAudio(AUDIO_FEEDBACK_3, "Nao, ele fez isso."); 
+          Serial.println("[QUIZ] A repetir a pergunta...");
+        }
+        delay(800); break;
+      }
+    }
+  }
+  Serial.println("[QUIZ] --- FIM DO QUIZ ---");
+}
+
+void loop() {
+  bool botaoPressionado = (digitalRead(BTN_MAIN) == LOW);
+  static bool botaoAnterior = false;
+
+  if (botaoPressionado && !botaoAnterior) {
+    Serial.println("\n[BOTAO] BOTAO PRINCIPAL CLICADO!");
     
-    delay(50); // Pequena pausa para estabilizar o sensor
+    if (millis() - tempoBloqueioSurgimento > 2000) {
+      
+      Serial.print("[FASE] A processar Fase Atual: ");
+      Serial.println(faseAtual);
+      
+      if (faseAtual == 0) {
+        Serial.println("[FASE] Fase 0 - A tocar Introducao.");
+        tocarAudio(AUDIO_INTRODUCAO, "Ola! Vamos lavar as maos");
+        delay(1000); 
+      }
+
+      if (faseAtual < 5) {
+        int bicho = random(0, 2);
+        animalQueFezAetapa[faseAtual] = bicho;
+        
+        Serial.print("[FASE] Animal sorteado para esta etapa: ");
+        Serial.println(bicho == 0 ? "Caranguejo" : "Peixe");
+
+        // ---> MOSTRAR O ANIMAL E TOCAR "PRESTA ATENÇÃO" ANTES DA ETAPA <---
+        Serial.println("[IMAGEM] A desenhar o animal sorteado...");
+        if (bicho == 0) {
+            display.drawRGBBitmap(0, 0, (const uint16_t*)crab_img, IMG_W, IMG_H);
+        } else {
+            display.drawRGBBitmap(0, 0, (const uint16_t*)fish_img, IMG_W, IMG_H);
+        }
+        
+        tocarAudio(audioPrestaAtencar, "Presta atencao (fase de ensino)");
+        delay(4000); // Pausa extra depois do áudio para a criança olhar para a imagem
+        // ------------------------------------------------------------------
+
+        if (faseAtual == 0) {
+            Serial.println("[IMAGEM] A desenhar: Sabao");
+            display.drawRGBBitmap(0, 0, (const uint16_t*)sabao_img, IMG_W, IMG_H);
+        } else if (faseAtual == 1) {
+            Serial.println("[IMAGEM] A desenhar: Abrir Agua");
+            display.drawRGBBitmap(0, 0, (const uint16_t*)open_water_img, IMG_W, IMG_H);
+        } else if (faseAtual == 2) {
+            Serial.println("[IMAGEM] A desenhar: Agua Corrente");
+            display.drawRGBBitmap(0, 0, (const uint16_t*)water_img, IMG_W, IMG_H);
+        } else if (faseAtual == 3) {
+            Serial.println("[IMAGEM] A desenhar: Fechar Agua");
+            display.drawRGBBitmap(0, 0, (const uint16_t*)close_water_img, IMG_W, IMG_H);
+        } else if (faseAtual == 4) {
+            Serial.println("[IMAGEM] A desenhar: Secar");
+            display.drawRGBBitmap(0, 0, (const uint16_t*)secar_img, IMG_W, IMG_H);
+        }
+        
+        if (faseAtual < 5) {
+            tocarAudio(audiosEtapas[faseAtual], "Audio da Etapa indice " + String(faseAtual)); 
+        } else {
+            Serial.println("[AVISO] FaseAtual é 5. Verifica se tens o índice 5 no array 'audiosEtapas'!");
+        }
+
+        tempoBloqueioSurgimento = millis(); // Reinicia o cronómetro de segurança
+        faseAtual++;
+        Serial.print("[SISTEMA] Etapa concluida. Proxima Fase será: ");
+        Serial.println(faseAtual);
+        
+      } else {
+        Serial.println("[SISTEMA] Todas as fases concluidas! A saltar para o Quiz.");
+        quizFinal();
+        
+        Serial.println("[SISTEMA] A reiniciar variaveis para comecar de novo.");
+        faseAtual = 0;
+        
+        display.fillScreen(ST7735_BLACK);
+        display.setCursor(0, 50);
+        display.setFont(&PressStart2P_Regular7pt7b);
+        display.setTextSize(1);
+        display.setTextColor(ST7735_WHITE);
+        display.println(" Carrega no");
+        display.println(" botao para");
+        display.println("  comecar");
+
+        tempoBloqueioSurgimento = millis(); // Previne toques acidentais a sair do quiz
+      }
+    } else {
+      Serial.println("[SISTEMA] Botao ignorado: 2 segundos de seguranca ainda nao passaram.");
+    }
+  } 
+  
+  botaoAnterior = botaoPressionado;
+  delay(50); // Estabilidade e debounce do botão
 }

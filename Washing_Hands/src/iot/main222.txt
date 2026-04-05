@@ -1,0 +1,166 @@
+#include <Arduino.h>
+#include <Adafruit_GFX.h>
+#include <SPI.h>
+#include <Adafruit_ST7735.h>
+#include <Adafruit_ILI9341.h> // Biblioteca especifica para o simulador Wokwi
+#include "PixelFont.h"
+
+// --- Pinos do Sensor Ultrassónico HC-SR04 ---
+#define TRIG_PIN 26 
+#define ECHO_PIN 27 
+
+// --- Pinos dos Botões (Reduzido para 2) ---
+#define YESBUTTON_PIN 14 
+#define NOBUTTON_PIN 25 
+
+// --- Pinos do DFPlayer e Ecrã ---
+#define DFPLAYER_RX2_PIN 16
+#define DFPLAYER_TX2_PIN 17
+
+#define DISPLAY_SCK_PIN 18
+#define DISPLAY_SDA_PIN 23
+#define DISPLAY_RES_PIN 4
+#define DISPLAY_RS_DC_PIN 2
+#define DISPLAY_CS_PIN 5
+
+// Inicializa o ecrã ILI9341 (Apenas para Simulação)
+Adafruit_ILI9341 display = Adafruit_ILI9341(DISPLAY_CS_PIN, DISPLAY_RS_DC_PIN, DISPLAY_RES_PIN);
+
+// Variáveis para controlar o Jogo e o Sensor
+int currentPhase = 0;   
+bool wasNear = false; // Guarda se a mão já estava perto na última leitura
+const int triggerDistance = 10; // Distância em centímetros para "clicar"
+
+void setup()
+{
+    Serial.begin(115200);
+    
+    // Configura os Botões
+    pinMode(YESBUTTON_PIN, INPUT_PULLUP);
+    pinMode(NOBUTTON_PIN, INPUT_PULLUP);
+
+    // Configura o Sensor Ultrassónico
+    pinMode(TRIG_PIN, OUTPUT);
+    pinMode(ECHO_PIN, INPUT);
+
+    // Inicializa o ecrã
+    display.begin(); 
+    display.setRotation(1); 
+    
+    Serial.println("Sistema pronto!");
+    
+    // Configuracoes de texto Pixel Art
+    display.setFont(&PressStart2P_Regular8pt7b); 
+    display.setTextSize(1); 
+    display.setTextColor(ILI9341_WHITE); 
+}
+
+void loop()
+{
+    // 1. DISPARAR O SENSOR ULTRASSÓNICO
+    digitalWrite(TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+
+    // 2. LER O TEMPO QUE O SOM DEMORA A VOLTAR
+    long duration = pulseIn(ECHO_PIN, HIGH);
+    
+    // 3. CALCULAR A DISTÂNCIA EM CENTÍMETROS
+    int distance = duration * 0.034 / 2;
+
+    // 4. VERIFICAR SE HÁ UMA MÃO PERTO (Entre 1 e 10 cm)
+    bool isNear = (distance > 4 && distance < triggerDistance);
+
+    // Se a mão acabou de se aproximar (não estava perto, e agora está)
+    if (isNear && !wasNear)
+    {
+        switch (currentPhase)
+        {
+        case 0:
+            display.fillScreen(ILI9341_BLACK);
+            display.setCursor(10, 50);
+            display.print("Ola bora lavar as");
+            display.setCursor(10, 80);
+            display.print("maos juntos?!!!"); 
+            
+            delay(3000);
+            display.fillScreen(ILI9341_BLACK);
+            delay(1000);
+            
+            display.setCursor(10, 80);
+            display.print("Aproxima a mao");
+            display.setCursor(10, 110);
+            display.print("para comecarmos!");
+            break;
+            
+        case 1:
+            display.fillScreen(ILI9341_BLACK);
+            display.setCursor(10, 50);
+            delay(3000);
+            display.print("Antes de comecar,");
+            display.setCursor(10, 80);
+            display.print("que tal algo divertido?");
+            
+            delay(3000);
+            display.fillScreen(ILI9341_BLACK);
+            display.setCursor(10, 50);
+            display.print("Vai aparecer um animal");
+            display.setCursor(10, 80);
+            display.print("e tu nao te podes");
+            display.setCursor(10, 110);
+            display.print("esquecer qual foi, ok?");
+            
+            delay(4000);
+            display.fillScreen(ILI9341_BLACK);
+            display.setCursor(10, 80);
+            display.print("Aproxima a mao!");
+            break;
+            
+        case 2:
+            display.fillScreen(ILI9341_BLACK);
+            display.setCursor(10, 80);
+            display.print("Quando decorares,");
+            display.setCursor(10, 110);
+            display.print("aproxima a mao!");
+            break;
+            
+        case 3:
+             display.fillScreen(ILI9341_BLACK);
+             display.setCursor(10, 50);
+             display.print("Bora la comecar!");
+             display.setCursor(10, 80);
+             display.print("Primeiro, sabao na mao!");
+             
+             delay(3000); 
+             display.setCursor(10, 140);
+             display.print("E agora esfrega esfrega!");
+            break;
+            
+        case 4:
+            display.fillScreen(ILI9341_BLACK);
+            break;
+            
+        case 5:
+            display.fillScreen(ILI9341_BLACK);
+            display.setCursor(10, 80);
+            display.print("Parabens conseguiste!!!!");
+            break;
+
+        default:
+            currentPhase = -1; 
+            break;
+        }
+
+        currentPhase++;
+        
+        Serial.print("Mudou para CurrentPhase: ");
+        Serial.println(currentPhase);
+    }
+
+    // Atualiza a variável para o próximo loop (evita que ative várias vezes se a mão ficar parada à frente do sensor)
+    wasNear = isNear;
+    
+    delay(50); // Pequena pausa para estabilizar o sensor
+}

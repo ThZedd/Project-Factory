@@ -1,0 +1,55 @@
+#include <Arduino.h>
+#include <DFRobotDFPlayerMini.h>
+
+// Vamos usar o teu botão principal para avançar as faixas
+#define BTN_MAIN 26  
+
+DFRobotDFPlayerMini player;
+int faixaAtual = 1;
+
+void setup() {
+  Serial.begin(115200);
+  // Usa os mesmos pinos de comunicação que tinhas no outro código
+  Serial2.begin(9600, SERIAL_8N1, 16, 17); 
+  
+  pinMode(BTN_MAIN, INPUT_PULLUP);
+
+  Serial.println();
+  Serial.println("====================================");
+  Serial.println("   TESTE DE AUDIO - DFPLAYER MINI   ");
+  Serial.println("====================================");
+  Serial.println("A iniciar DFPlayer...");
+
+  if (!player.begin(Serial2)) {
+    Serial.println("ERRO: O DFPlayer nao responde!");
+    Serial.println("Verifica as ligacoes (RX/TX) ou o Cartao SD.");
+    while (true); // Pára o código aqui se houver erro
+  }
+
+  Serial.println("DFPlayer Pronto!");
+  player.volume(20); // Volume entre 0 e 30
+  Serial.println("-> Carrega no botao para tocar a Faixa 1.");
+}
+
+void loop() {
+  // Se o botão for pressionado
+  if (digitalRead(BTN_MAIN) == LOW) {
+    
+    Serial.print("A tocar a faixa numero: ");
+    Serial.println(faixaAtual);
+    
+    player.play(faixaAtual); // Toca a faixa
+    
+    faixaAtual++; // Prepara o número para o próximo clique
+    
+    // Pela tua imagem, tens 16 faixas. Se passar da 16, volta à 1.
+    if (faixaAtual > 16) { 
+      faixaAtual = 1;
+      Serial.println("--- Chegou ao fim, vai voltar a faixa 1 ---");
+    }
+
+    // Um delay grande de 1 segundo (1000ms) serve de debounce
+    // para garantir que não saltas duas faixas com um só clique
+    delay(1000); 
+  }
+}

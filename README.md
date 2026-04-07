@@ -1,4 +1,4 @@
-# 🧼 Jogo Interativo Educativo: Lavar as Mãos
+# Jogo Interativo Educativo: Lavar as Mãos
 
 ![Status](https://img.shields.io/badge/Status-Concluído-success)
 ![Plataforma](https://img.shields.io/badge/Plataforma-ESP32-blue)

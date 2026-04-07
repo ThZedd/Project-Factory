@@ -8,7 +8,7 @@ Este projeto consiste num **Guia Educativo Interativo**, desenvolvido com o obje
 
 ---
 
-## 🎮 Como Funciona o Jogo?
+## Como Funciona o Jogo?
 
 O sistema guia a criança através de **5 etapas fundamentais** da lavagem das mãos:
 1. Pôr sabão nas mãos.
@@ -20,7 +20,7 @@ O sistema guia a criança através de **5 etapas fundamentais** da lavagem das m
 Para manter a criança concentrada na atividade, implementámos um mini-jogo de memória:
 * **Mecânica de Foco:** Antes de cada etapa, é exibido um animal de forma aleatória (🦀 **Caranguejo** ou 🐟 **Peixe**) acompanhado de um aviso sonoro (*"Presta atenção!"*), indicando que esse animal vai realizar a etapa.
 
-### 🧠 Quiz Interativo de Memória
+### Quiz Interativo de Memória
 Após as 5 etapas, o sistema entra em modo de avaliação:
 * Gera uma pergunta aleatória cruzando um animal com uma das etapas (ex: *"Este animal fez a etapa de lavar as mãos?"* juntamente com a imagem do animal).
 * A criança responde através de dois botões físicos (**"Sim"** e **"Não"**).
@@ -28,7 +28,7 @@ Após as 5 etapas, o sistema entra em modo de avaliação:
 
 ---
 
-## 🛠️ Arquitetura e Hardware
+## Arquitetura e Hardware
 
 O sistema foi desenhado para ser autónomo, portátil e seguro para utilização infantil. 
 
@@ -46,14 +46,14 @@ O sistema foi desenhado para ser autónomo, portátil e seguro para utilização
 
 ---
 
-## ⚙️ Detalhes Técnicos e Funcionalidades
+## Detalhes Técnicos e Funcionalidades
 
 * **Sincronização de Áudio Assíncrono:** O sistema foi configurado com pausas dinâmicas ajustadas ao tamanho dos ficheiros MP3 lidos pelo DFPlayer. Isto garante que a execução do código flui sem que nenhum áudio seja cortado a meio.
 * **Bloqueio de Segurança (Cooldown / Debounce):** Implementação de um bloqueio temporal via software para ignorar leituras de "duplos cliques" acidentais nos botões por parte das crianças, garantindo a estabilidade e fluidez do jogo.
 
 ---
 
-## 👥 Equipa e Distribuição de Tarefas
+## Equipa e Distribuição de Tarefas
 
 Este projeto foi desenvolvido de forma colaborativa, com a seguinte distribuição de responsabilidades:
 
@@ -62,4 +62,4 @@ Este projeto foi desenvolvido de forma colaborativa, com a seguinte distribuiç�
 * **Tiago Rato:** Otimização e implementação da Sincronização de Áudio Assíncrono.
 
 ---
-*Projeto desenvolvido no âmbito da disciplina [Nome da tua Disciplina/Curso] - 2026*
+*Projeto desenvolvido no âmbito da disciplina [Project Factory/Engenharia Informática] - 2026*

@@ -41,9 +41,8 @@ O sistema foi desenhado para ser autónomo, portátil e seguro para utilização
   * Módulo TP4056 (Para carregamento via USB)
   * Módulo Step-Up MT3608 (Para elevar a tensão para 5V, alimentando os periféricos)
 
-> **Nota:** Podes inserir aqui o diagrama do teu circuito. Substitui o link abaixo pelo caminho da tua imagem no repositório.
-> 
-> `![Diagrama do Circuito](https://github.com/ThZedd/Project-Factory/blob/main/media/Circuitos_Eletricos.pdf)`
+
+`![Diagrama do Circuito](https://github.com/ThZedd/Project-Factory/blob/main/media/Circuitos_Eletricos.pdf)`
 
 ---
 

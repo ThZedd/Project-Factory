@@ -42,7 +42,7 @@ O sistema foi desenhado para ser autónomo, portátil e seguro para utilização
   * Módulo Step-Up MT3608 (Para elevar a tensão para 5V, alimentando os periféricos)
 
 
-`![Diagrama do Circuito](https://github.com/ThZedd/Project-Factory/blob/main/media/Circuitos_Eletricos.pdf)`
+[Clique aqui para ver o Diagrama do Circuito (PDF)](https://github.com/ThZedd/Project-Factory/blob/main/media/Circuitos_Eletricos.pdf)
 
 ---
 
